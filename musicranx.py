@@ -21,12 +21,14 @@ def check_status(response: dict):
     elif status_code == 402:
         raise http.exceptions.HTTPError("Number of requests has exceeded daily limit")
     elif status_code == 503:
-        raise http.exceptions.HTTPError("The server is currently busy, please try again later")
+        raise http.exceptions.HTTPError(
+            "The server is currently busy, please try again later"
+        )
     elif status_code != 200:
         raise http.exceptions.HTTPError("A HTTP error has occurred")
 
-class MusicranxAPI:
 
+class MusicranxAPI:
     def __init__(self, apikey):
         self.API_KEY = apikey
         self.ROOT_URL = "https://api.musixmatch.com/ws/1.1/"
@@ -39,17 +41,26 @@ class MusicranxAPI:
 
         # Send request to musicranx
         try:
-            params = {"format": "jsonp", "callback": "callback", "q_artist": artistname, "apikey": self.API_KEY}
+            params = {
+                "format": "jsonp",
+                "callback": "callback",
+                "q_artist": artistname,
+                "apikey": self.API_KEY,
+            }
             response = http.get(f"{self.ROOT_URL}artist.search", params).text
 
             # strip off jsonp content
-            response = response[response.index("(") + 1: response.rindex(")")]
+            response = response[response.index("(") + 1 : response.rindex(")")]
 
             # convert to python dictionary
             formatted_response = json.loads(response)
             check_status(formatted_response)
 
-            return str(formatted_response['message']['body']['artist_list'][0]['artist']['artist_id'])
+            return str(
+                formatted_response["message"]["body"]["artist_list"][0]["artist"][
+                    "artist_id"
+                ]
+            )
         except http.exceptions.HTTPError as err:
             print(err)
 
@@ -61,19 +72,24 @@ class MusicranxAPI:
 
         # Send request to musicranx
         try:
-            params = {"format": "jsonp", "callback": "callback", "artist_id": artistid, "apikey": self.API_KEY}
+            params = {
+                "format": "jsonp",
+                "callback": "callback",
+                "artist_id": artistid,
+                "apikey": self.API_KEY,
+            }
             response = http.get(f"{self.ROOT_URL}artist.albums.get", params).text
 
             # strip off jsonp content
-            response = response[response.index("(") + 1: response.rindex(")")]
+            response = response[response.index("(") + 1 : response.rindex(")")]
 
             # convert to python dictionary
             formatted_response = json.loads(response)
             check_status(formatted_response)
-            album_list = formatted_response['message']['body']['album_list']
+            album_list = formatted_response["message"]["body"]["album_list"]
 
             # Loop through response and add all album ids to list
-            album_ids = [x['album']['album_id'] for x in album_list]
+            album_ids = [x["album"]["album_id"] for x in album_list]
             return album_ids
 
         except http.exceptions.HTTPError as err:
@@ -85,20 +101,25 @@ class MusicranxAPI:
         a list of track ids for all the tracks on the album
         """
         try:
-        # Send request to musicranx
-            params = {"format": "jsonp", "callback": "callback", "album_id": albumid, "apikey": self.API_KEY}
+            # Send request to musicranx
+            params = {
+                "format": "jsonp",
+                "callback": "callback",
+                "album_id": albumid,
+                "apikey": self.API_KEY,
+            }
             response = http.get(f"{self.ROOT_URL}album.tracks.get", params).text
 
             # strip off jsonp content
-            response = response[response.index("(") + 1: response.rindex(")")]
+            response = response[response.index("(") + 1 : response.rindex(")")]
 
             # convert to python dictionary
             formatted_response = json.loads(response)
             check_status(formatted_response)
-            track_list = formatted_response['message']['body']['track_list']
+            track_list = formatted_response["message"]["body"]["track_list"]
 
             # Loop through response and add all track ids to list
-            track_ids = [x['track']['track_id'] for x in track_list]
+            track_ids = [x["track"]["track_id"] for x in track_list]
             return track_ids
         except http.exceptions.HTTPError as err:
             print(err)
@@ -109,19 +130,26 @@ class MusicranxAPI:
         the track's lyrics in string format
         """
         try:
-            params = {"format": "jsonp", "callback": "callback", "track_id": trackid, "apikey": self.API_KEY}
+            params = {
+                "format": "jsonp",
+                "callback": "callback",
+                "track_id": trackid,
+                "apikey": self.API_KEY,
+            }
             r = http.get(f"{self.ROOT_URL}track.lyrics.get", params).text
 
             # strip off jsonp content
-            response = r[r.index("(") + 1: r.rindex(")")]
+            response = r[r.index("(") + 1 : r.rindex(")")]
 
             # convert to python dictionary
             formatted_response = json.loads(response)
             check_status(formatted_response)
-            unformatted_lyrics = formatted_response['message']['body']['lyrics']['lyrics_body']
+            unformatted_lyrics = formatted_response["message"]["body"]["lyrics"][
+                "lyrics_body"
+            ]
 
             # remove musicranx disclaimer
-            lyrics = unformatted_lyrics[:unformatted_lyrics.find('...')]
+            lyrics = unformatted_lyrics[: unformatted_lyrics.find("...")]
             return lyrics
 
         except http.exceptions.HTTPError as err:
@@ -141,4 +169,3 @@ class MusicranxAPI:
                 total_songs += 1
 
         return math.ceil(total_word_count / total_songs)
-
